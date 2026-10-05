@@ -1,0 +1,29 @@
+name: Copy full site content
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/scrape-site.yml", "tools/scrape.py", "tools/urls.txt"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: scrape, cancel-in-progress: true }
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install requests pillow
+      - run: python tools/scrape.py
+      - name: Save to the scrape branch (not published)
+        run: |
+          du -sh scrape scrape/img || true
+          cd scrape
+          git init -q -b scrape
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -qm "Scraped site content and images"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" scrape

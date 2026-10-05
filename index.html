@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wichita Roofing Contractor | Rhoden Roofing, LLC</title>
 <meta name="description" content="Rhoden Roofing is Wichita's premier local roofing company. Certified GAF President's Club Contractor providing roof replacements, repairs, &amp; warranties.">
-<!-- PREVIEW BUILD: keep out of search engines -->
+<!-- STAGING BUILD: keep out of search engines -->
 <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
 <meta name="googlebot" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
@@ -753,7 +753,7 @@ form.addEventListener('submit',async e=>{
   try{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:data});ok=r.ok}catch(_){}
   form.innerHTML=ok
    ?'<div class="form-ok">Thanks! Your estimate request is in. A Rhoden Roofing team member will contact you shortly.</div>'
-   :'<div class="form-ok">Thanks! This is a preview site, so the form isn’t connected yet. Please call (316) 927-2233 to schedule your free estimate.</div>';
+   :'<div class="form-ok">Thanks! This is a staging site, so the form isn’t connected yet. Please call (316) 927-2233 to schedule your free estimate.</div>';
 });
 
 // Gentle reveal (content is visible by default; only animates if below the fold)

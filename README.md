@@ -1,8 +1,8 @@
-# Rhoden Roofing – website preview
+# Rhoden Roofing – staging site
 
 Redesigned homepage for Rhoden Roofing, LLC (Wichita, KS), published with GitHub Pages.
 
-This is a private preview and is hidden from search engines (`noindex` meta tags and a `robots.txt` that blocks all crawlers).
+This is a staging site and is hidden from search engines (`noindex` meta tags and a `robots.txt` that blocks all crawlers).
 
 To go live on rhodenroofing.com later: remove the `robots` meta tags in `index.html` and `thanks.html`, and delete `robots.txt`.
 

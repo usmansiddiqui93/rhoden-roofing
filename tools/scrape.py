@@ -98,14 +98,14 @@ for rt in routes:
     print("api", rt, len(data))
 
 # ---------- 3. Images ----------
-IMG_RE = re.compile(r'https?://rhodenroofing\.com/wp-content/uploads/[^\s"\'()<>,]+?\.(?:jpe?g|png|gif|webp|svg)', re.I)
+IMG_RE = re.compile(r'rhodenroofing\.com/wp-content/uploads/[^\s"\'()<>,]+?\.(?:jpe?g|png|gif|webp|svg)', re.I)
 found = set()
 for root, _, files in os.walk(OUT):
+    if "/img" in root: continue
     for f in files:
         if f.endswith((".html", ".json")):
             txt = open(os.path.join(root, f), encoding="utf-8", errors="ignore").read().replace("\\/", "/")
-            found.update(IMG_RE.findall(txt))
-found = {u.replace("http://", "https://") for u in found}
+            found.update("https://" + m for m in IMG_RE.findall(txt))
 # Drop WordPress resized variants when the original is also referenced, keep everything else.
 def base_of(u): return re.sub(r'-\d{2,4}x\d{2,4}(?=\.\w+$)', '', u)
 originals = {u for u in found if base_of(u) == u}

@@ -1,0 +1,41 @@
+name: Copy images into repo
+on:
+  push:
+    paths: [".github/workflows/fetch-images.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download images and point the site at them
+        run: |
+          mkdir -p images
+          grep -ohE 'https://(rhodenroofing\.com/wp-content/uploads|lh3\.googleusercontent\.com|i\.ytimg\.com)/[^"]+' index.html | sort -u > /tmp/urls.txt
+          n=0
+          while read -r url; do
+            n=$((n+1))
+            case "$url" in
+              *rhodenroofing.com*) f="images/$(basename "${url%%\?*}")" ;;
+              *ytimg*) f="images/video-thumb.jpg" ;;
+              *) f="images/review-$n.jpg" ;;
+            esac
+            if curl -fsSL -A "Mozilla/5.0" "$url" -o "$f"; then
+              python3 - "$url" "$f" <<'PY'
+          import sys
+          u,f=sys.argv[1],sys.argv[2]
+          s=open('index.html').read().replace(u,f)
+          open('index.html','w').write(s)
+          PY
+            else echo "failed: $url"; rm -f "$f"; fi
+          done < /tmp/urls.txt
+          ls -la images
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Copy site images into repository" || echo "nothing to commit"
+          git push

@@ -11,14 +11,28 @@ UA = {"User-Agent": "Mozilla/5.0 (compatible; RhodenStagingBuild/1.0)"}
 S = requests.Session(); S.headers.update(UA)
 os.makedirs(f"{OUT}/html", exist_ok=True); os.makedirs(f"{OUT}/api", exist_ok=True)
 
-def get(url, **kw):
-    for _ in range(3):
+import time, threading
+LOCK = threading.Lock(); NEXT = [0.0]
+def get(url, gap=1.2, **kw):
+    """Polite GET: global spacing between requests, honours 429/503 Retry-After."""
+    err = None
+    for attempt in range(8):
+        with LOCK:
+            wait = NEXT[0] - time.time()
+            if wait > 0: time.sleep(wait)
+            NEXT[0] = time.time() + gap
         try:
             r = S.get(url, timeout=40, **kw)
+            if r.status_code in (429, 503):
+                ra = r.headers.get("Retry-After", "")
+                delay = int(ra) if ra.isdigit() else min(15 * (attempt + 1), 120)
+                print("429 wait", delay, url, flush=True)
+                with LOCK: NEXT[0] = max(NEXT[0], time.time() + delay)
+                continue
             return r
         except Exception as e:
-            err = e
-    print("FAIL", url, err); return None
+            err = e; time.sleep(5)
+    print("FAIL", url, err, flush=True); return None
 
 def slug_of(url):
     p = urlparse(url).path.strip("/")
@@ -29,6 +43,8 @@ urls = [u.strip() for u in open("tools/urls.txt") if u.strip()]
 urls = ["https://rhodenroofing.com/"] + [u for u in urls if u != "https://rhodenroofing.com/"]
 status = {}
 def fetch_page(u):
+    if os.path.exists(f"{OUT}/html/{slug_of(u)}.html"):
+        status[u] = 200; return
     r = get(u)
     if r is None: status[u] = "error"; return
     status[u] = r.status_code
@@ -37,8 +53,10 @@ def fetch_page(u):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         open(path, "w", encoding="utf-8").write(r.text)
         if r.url.rstrip("/") != u.rstrip("/"): status[u] = f"redirect:{r.url}"
-with ThreadPoolExecutor(8) as ex: list(ex.map(fetch_page, urls))
+with ThreadPoolExecutor(2) as ex: list(ex.map(fetch_page, urls))
 json.dump(status, open(f"{OUT}/status.json", "w"), indent=1)
+missing = [u for u, v in status.items() if v != 200 and not str(v).startswith("redirect")]
+print("missing pages:", len(missing), missing[:20])
 print("pages:", sum(1 for v in status.values() if v == 200), "/", len(urls))
 
 # ---------- 2. WordPress REST API ----------
@@ -71,6 +89,8 @@ if tax is not None and tax.ok:
             if rb and rb not in routes: routes.append(rb)
     except Exception: pass
 for rt in routes:
+    fn = f"{OUT}/api/{rt.replace('/', '_')}.json"
+    if os.path.exists(fn) and json.load(open(fn)): print("api cached", rt); continue
     data = api_all(rt)
     if rt == "media":
         data = [{k: d.get(k) for k in ("id", "source_url", "alt_text", "media_details")} for d in data]
@@ -96,7 +116,9 @@ def fetch_img(u):
     rel = urlparse(u).path.split("/wp-content/uploads/", 1)[1]
     dest = f"{OUT}/img/{rel}"
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    r = get(u)
+    if os.path.exists(dest) and os.path.getsize(dest) > 0:
+        imgmap[u] = rel; return
+    r = get(u, gap=0.35)
     if r is None or not r.ok: return
     open(dest, "wb").write(r.content)
     try:
@@ -113,6 +135,6 @@ def fetch_img(u):
     except Exception as e:
         print("img process", u, e)
     imgmap[u] = rel
-with ThreadPoolExecutor(12) as ex: list(ex.map(fetch_img, want))
+with ThreadPoolExecutor(4) as ex: list(ex.map(fetch_img, want))
 json.dump(imgmap, open(f"{OUT}/images.json", "w"), indent=0)
 print("images saved:", len(imgmap))

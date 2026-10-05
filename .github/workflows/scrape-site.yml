@@ -10,20 +10,29 @@ concurrency: { group: scrape, cancel-in-progress: true }
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install requests pillow
-      - run: python tools/scrape.py
+      - name: Resume from earlier copy if present
+        run: |
+          git fetch --depth 1 origin scrape && git worktree add scrape origin/scrape || mkdir -p scrape
+          rm -rf scrape/.git
+      - run: python -u tools/scrape.py
+        timeout-minutes: 220
       - name: Save to the scrape branch (not published)
+        if: always()
         run: |
           du -sh scrape scrape/img || true
           cd scrape
+          rm -rf .git
           git init -q -b scrape
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           git commit -qm "Scraped site content and images"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" scrape
+
+# run 2

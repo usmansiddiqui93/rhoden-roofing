@@ -1,3 +1,2 @@
-# Preview build - keep out of all search engines
 User-agent: *
 Disallow: /

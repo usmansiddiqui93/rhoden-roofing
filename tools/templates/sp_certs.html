@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Manufacturer Certifications', lede='Certified by the manufacturers behind the roofs we install, from GAF shingles to Ludowici clay tile, and by HAAG for roof inspection.', actions=true %}{% include "_hero.html" %}{% endwith %}
+<section class="section">
+  <div class="wrap sp-cert-feature">
+    {% if GAF_PC %}<img src="{{ GAF_PC }}" alt="GAF President's Club certification badge" loading="lazy">{% endif %}
+    <div><span class="eyebrow">Headline certification</span><h2 class="sec-title">GAF President's Club contractor</h2><p class="sp-lead">Rhoden Roofing is certified by GAF as a President's Club installer and Master Elite contractor, and holds certifications with Ludowici, DaVinci Roofscapes, Malarkey, IKO, Mule-Hide and Gen Flex.</p></div>
+  </div>
+</section>
+{% for g in SC.CERTS %}
+<section class="section{% if loop.index is odd %} alt{% endif %}">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">{{ g['items']|length }} certifications</span><h2>{{ g.group }}</h2></div><p>{{ g.note }}</p></div>
+    <div class="sp-logos">{% for it in g['items'] %}<figure class="sp-logo">{% if it.img %}<span><img src="{{ it.img }}" alt="{{ it.name }} logo" loading="lazy"></span>{% endif %}<figcaption>{{ it.name }}</figcaption></figure>{% endfor %}</div>
+  </div>
+</section>
+{% endfor %}
+<section class="section">
+  <div class="wrap sp-split">
+    <div><span class="eyebrow">Top-notch work</span><h2 class="sec-title">By a dedicated, expert contractor</h2><p class="sp-lead">You’ll appreciate a crew that is determined to perform the best installations after guiding you to the best choice for your property. Check out recently completed jobs and see what can be done for your residential or commercial property.</p></div>
+    <div class="sp-actions">{% if exists('gallery') %}<a class="btn btn-copper" href="{{ url_for('gallery') }}">View project gallery</a>{% endif %}{% if exists('awards') %}<a class="btn btn-dark" href="{{ url_for('awards') }}">See our awards</a>{% endif %}</div>
+  </div>
+</section>
+{% endblock %}

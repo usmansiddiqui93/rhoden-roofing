@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block main %}
+{% set apply = url_for('careers/apply-at-rhoden-roofing') if exists('careers/apply-at-rhoden-roofing') else CONTACT %}
+<section class="phero sp-hero-careers">
+  {% if hero %}<div class="bg"><img src="{{ (SC.TEAMS|first).img_url or hero }}" alt="" fetchpriority="high"></div>{% endif %}
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Breadcrumb">{% for c in crumbs %}<a href="{{ c.href }}">{{ c.label }}</a><span aria-hidden="true">/</span>{% endfor %}<span>Careers</span></nav>
+    <span class="eyebrow">Careers at Rhoden Roofing</span>
+    <h1>Roofs that last, careers that grow</h1>
+    <p class="lede">Join Wichita’s top roofing company. Excellence is recognized and rewarded, benefits start strong, and growth is part of our DNA.</p>
+    <div class="actions"><a class="btn btn-copper" href="{{ apply }}">View open positions</a>{% if exists('our-team') %}<a class="btn btn-ghost" href="{{ url_for('our-team') }}">Meet the team</a>{% endif %}</div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">How you fit</span><h2>Our teams</h2></div><p>Five teams, one promise: a roof that lasts a lifetime.</p></div>
+    <div class="sp-teams">
+      {% for t in SC.TEAMS %}
+      <article class="sp-teamcard">
+        <div class="ph">{% if t.img_url %}<img src="{{ t.img_url }}" alt="{{ t.alt }}" loading="lazy">{% endif %}</div>
+        <div class="bd"><h3>{{ t.name }}</h3><p>{{ t.text }}</p><p class="sp-tag">{{ t.tag }}</p></div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Our company culture</span><h2>What sets us apart</h2></div><p>What sets every company apart is its people. To our employees we promise this: excellence will always be recognized and rewarded.</p></div>
+    {% include "_sp_apart.html" %}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Benefits</span><h2>A secure foundation from day one</h2></div></div>
+    <div class="sp-benefit-tiles">{% for k, t in SC.BENEFITS %}<div><b>{{ k }}</b><span>{{ t }}</span></div>{% endfor %}</div>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Being a great teammate</span><h2>Our core values</h2></div></div>
+    {% with values=SC.VALUES_CAREERS %}{% include "_sp_values.html" %}{% endwith %}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">How we hire</span><h2>We value authenticity over perfection</h2></div><p>Be genuine, ask thoughtful questions and engage in honest dialogue. Here is what happens from first look to first weeks.</p></div>
+    <ol class="sp-hire">{% for t, d in SC.HIRING %}<li><span class="sp-step-n">{{ loop.index }}</span><div><h3>{{ t }}</h3><p>{{ d }}</p></div></li>{% endfor %}</ol>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap sp-split">
+    <div><span class="eyebrow">Join Rhoden Roofing</span><h2 class="sec-title">Current open positions</h2><p class="sp-lead">See the roles we are hiring for and apply online. We personally respond to every question.</p></div>
+    <div class="sp-actions"><a class="btn btn-copper" href="{{ apply }}">View and apply</a><a class="btn btn-dark" href="tel:{{ PHONE_TEL }}">Call {{ PHONE }}</a></div>
+  </div>
+</section>
+{% endblock %}
+{% block cta %}{% endblock %}

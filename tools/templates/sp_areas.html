@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Service Areas', lede='Residential and commercial roofing across Wichita and south-central Kansas, with commercial and multifamily work in Kansas, Missouri, Oklahoma and Arkansas.', actions=true %}{% include "_hero.html" %}{% endwith %}
+<section class="section">
+  <div class="wrap sp-areas-top">
+    <figure class="sp-map">{% if MAP %}<img src="{{ MAP }}" alt="Map of the Rhoden Roofing service radius around Wichita, reaching Salina, Junction City, Emporia, Ponca City and Pratt" loading="lazy">{% endif %}<figcaption>Service radius around Wichita, Kansas</figcaption></figure>
+    <div class="sp-area-stats">
+      <div><b>{{ areas|length }}</b><span>cities and towns with a local page</span></div>
+      <div><b>{{ counties|length }}</b><span>Kansas counties served</span></div>
+      <div><b>{{ SC.SELL.states|length }}</b><span>states for commercial and multifamily work</span></div>
+      <p>Rhoden Roofing looks forward to helping with your residential or commercial project, whether it be roof repair, replacement, gutters or anything else. We strive to meet the needs of every customer and provide 100% customer satisfaction.</p>
+    </div>
+  </div>
+</section>
+<section class="section alt" id="towns">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Cities we serve</span><h2>Find your town</h2></div><p>Each town page covers local projects and services. Towns with a dedicated residential or commercial page are marked.</p></div>
+    <div class="tools-bar">
+      <label class="search" for="town-q"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="town-q" type="search" placeholder="Search {{ areas|length }} towns…"></label>
+    </div>
+    <div class="sp-towns" id="town-grid">
+      {% for a in areas %}<a class="sp-town" href="{{ a.href }}" data-search="{{ a.label|lower }}"><strong>{{ a.label }}</strong><span class="sp-badges">{% if a.res %}<i>Residential</i>{% endif %}{% if a.com %}<i class="com">Commercial</i>{% endif %}</span></a>{% endfor %}
+    </div>
+    <p class="empty" hidden id="town-empty">No town matches that search. Call {{ PHONE }}: we likely still serve you.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Counties</span><h2>Counties we serve</h2></div></div>
+    <div class="area-grid">{% for c in counties %}<a href="{{ c.href }}">{{ c.label }}</a>{% endfor %}</div>
+    <div class="sp-states"><span class="eyebrow">Commercial and multifamily</span><div class="chips">{% for st in SC.SELL.states %}<span class="chip sp-chip-static">{{ st }}</span>{% endfor %}</div></div>
+  </div>
+</section>
+{% endblock %}

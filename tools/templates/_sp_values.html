@@ -1,0 +1,9 @@
+<div class="sp-values">
+  {% for v in values %}
+  <article class="sp-value">
+    {% if v.icon_url %}<img src="{{ v.icon_url }}" alt="" width="64" height="64" loading="lazy">{% endif %}
+    <h3>{{ v.name }}</h3>
+    <p>{{ v.text }}</p>
+  </article>
+  {% endfor %}
+</div>

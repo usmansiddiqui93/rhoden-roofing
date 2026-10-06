@@ -151,6 +151,69 @@
     e.preventDefault(); openLightbox(a.dataset.full, $('img', a).alt);
   });
 
+
+  // Team directory: filter, search, bio dialog
+  var tg = $('#team-grid');
+  if (tg) {
+    var dept = '', tq = '';
+    var people = $$('.sp-person', tg);
+    var applyTeam = function () {
+      var shown = 0;
+      people.forEach(function (p) {
+        var ok = (!dept || p.dataset.dept === dept) && (!tq || p.dataset.search.indexOf(tq) > -1);
+        p.hidden = !ok; if (ok) shown++;
+      });
+      $('#team-empty').hidden = shown > 0;
+    };
+    $$('#team-chips button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        dept = b.dataset.dept;
+        $$('#team-chips button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+        applyTeam();
+      });
+    });
+    var tqi = $('#team-q'); if (tqi) tqi.addEventListener('input', function () { tq = tqi.value.trim().toLowerCase(); applyTeam(); });
+  }
+  var dlg = $('#bio-dialog');
+  if (dlg) {
+    document.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-bio]'); if (!b) return;
+      var tpl = document.getElementById('bio-' + b.dataset.bio); if (!tpl) return;
+      var body = $('.sp-dialog-body', dlg); body.innerHTML = ''; body.appendChild(tpl.content.cloneNode(true));
+      if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+      body.scrollTop = 0;
+    });
+    $('.sp-dialog-close', dlg).addEventListener('click', function () { dlg.close ? dlg.close() : dlg.removeAttribute('open'); });
+    dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+  }
+
+  // Tabs
+  $$('[data-tabs]').forEach(function (box) {
+    var tabs = $$('[role="tab"]', box);
+    var select = function (t) {
+      tabs.forEach(function (x) {
+        var on = x === t; x.setAttribute('aria-selected', on); x.tabIndex = on ? 0 : -1;
+        document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+      });
+    };
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(t); });
+      t.addEventListener('keydown', function (e) {
+        var d = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return; e.preventDefault();
+        var n = tabs[(i + d + tabs.length) % tabs.length]; select(n); n.focus();
+      });
+    });
+  });
+
+  // Town finder
+  var townQ = $('#town-q');
+  if (townQ) townQ.addEventListener('input', function () {
+    var q = townQ.value.trim().toLowerCase(), shown = 0;
+    $$('#town-grid .sp-town').forEach(function (a) { var ok = !q || a.dataset.search.indexOf(q) > -1; a.hidden = !ok; if (ok) shown++; });
+    $('#town-empty').hidden = shown > 0;
+  });
+
   // Gallery lightbox
   document.addEventListener('click', function (e) {
     var a = e.target.closest('.gal a, .gal img'); if (!a) return;
@@ -164,11 +227,11 @@
   });
 
   // Estimate forms (staging: no backend)
-  $$('form.estimate').forEach(function (form) {
+  $$('form.estimate, #sellForm').forEach(function (form) {
     if (form.dataset.bound) return; form.dataset.bound = 1;
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      form.innerHTML = '<div class="form-ok">Thanks! This is a staging site, so the form isn’t connected yet. Please call (316) 927-2233 to schedule your free estimate.</div>';
+      form.innerHTML = '<div class="form-ok">Thanks! This is a staging site, so this form isn’t connected yet. Please call (316) 927-2233 and we’ll take it from there.</div>';
     });
   });
 })();

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Construction Process', lede='Our proven process takes every roof from the first on-site meeting to the final photo report in five steps, built to city code and manufacturer specs.', actions=true %}{% include "_hero.html" %}{% endwith %}
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Proven process</span><h2>Five steps, 25 checkpoints</h2></div><p>Every step ends with something you can see: a photo checklist, a written quote, a confirmed schedule, a photo-documented build and a photo report for insurance.</p></div>
+    <ol class="sp-process">
+      {% for st in SC.PROCESS %}
+      <li class="sp-stage">
+        <div class="sp-stage-head"><span class="sp-stage-n">Step {{ loop.index }}</span><h3>{{ st.name }}</h3></div>
+        <ul>{% for it in st['items'] %}<li>{{ it }}</li>{% endfor %}</ul>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap sp-split">
+    <div><span class="eyebrow">Delivering peace of mind</span><h2 class="sec-title">Protecting what matters most</h2><p class="sp-lead">Four words sit at the center of every project.</p></div>
+    {% include "_sp_words.html" %}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">In their words</span><h2>What the process feels like</h2></div>{% if exists('customer-reviews') %}<a class="btn btn-dark" href="{{ url_for('customer-reviews') }}">Read more reviews</a>{% endif %}</div>
+    <div class="sp-quotes">{% for r in SC.PROCESS_REVIEWS %}<figure class="sp-quote"><blockquote>{{ r.text }}</blockquote><figcaption><strong>{{ r.name }}</strong> · {{ r.role }}</figcaption></figure>{% endfor %}</div>
+  </div>
+</section>
+{% endblock %}

@@ -578,7 +578,7 @@ for s in AREAS:
     PAGES[s]["parent"] = "/".join(s.split("/")[:2]) if s.count("/") >= 2 and "/".join(s.split("/")[:2]) in PAGES else None
 TOP_AREAS = [s for s in AREAS if s.count("/") == 1 and s.startswith("service-areas/")]
 COUNTIES = [s for s in TOP_AREAS if "county" in s]
-CITIES = [s for s in TOP_AREAS if "county" not in s]
+CITIES = [s for s in TOP_AREAS if "county" not in s and "roofing-company" not in s]
 
 # ------------------------------------------------------------------ navigation
 def L(slug, label=None):
@@ -711,6 +711,61 @@ def carousel_html(photos, label="Roofing projects"):
             f'<div class="car-progress"><i></i></div></div>'
             f'<div class="car-thumbs">{thumbs}</div></div>')
 
+# ------------------------------------------------------------------ hand-designed company pages
+sys.path.insert(0, os.path.join(ROOT, "tools"))
+import special_content as SC
+def up(path):
+    return local_img("wp-content/uploads/" + path) if path else None
+
+DEPTS = [  # (department, role pattern) in display order
+    ("Leadership", r"^(owner|special projects|integrator|head of)"),
+    ("Project coordinators", r"project coordinator|real estate|sales liaison|estimator"),
+    ("Commercial", r"commercial|k-12"),
+    ("Claims", r"claims"),
+    ("Production", r"production|foreman|quality assurance|superintendent"),
+    ("Marketing", r"marketing|video|content"),
+    ("Office and operations", r"."),
+]
+def team_members():
+    if "our-team" not in HTML: return []
+    soup = BeautifulSoup(open(HTML["our-team"], encoding="utf-8", errors="ignore").read(), "lxml")
+    out = []
+    for col in soup.select(".et_pb_column"):
+        tg = col.select_one(".et_pb_toggle_content")
+        txt = col.select_one(".et_pb_text_inner")
+        if not tg or not txt: continue
+        bits = [b.strip() for b in txt.get_text("|", strip=True).split("|") if b.strip()]
+        if not bits: continue
+        name, role = bits[0], " ".join(bits[1:]).strip()
+        img = col.select_one(".et_pb_image img")
+        photo = local_img(img_src(img)) if img else None
+        paras = []
+        for p in tg.find_all("p"):
+            t = re.sub(r"\s+", " ", p.get_text(" ", strip=True)).strip()
+            if t and not re.fullmatch(r"bio coming soon!?", t, re.I): paras.append(t)
+        dept = next(d for d, pat in DEPTS if re.search(pat, role.lower()))
+        slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+        out.append({"name": name, "role": role, "photo": photo, "bio": paras, "dept": dept, "slug": slug})
+    return out
+TEAM = team_members()
+log("team members:", len(TEAM))
+for v in SC.VALUES_CULTURE + SC.VALUES_CAREERS: v["icon_url"] = up(v["icon"])
+for t in SC.TEAMS: t["img_url"] = up(t["img"])
+for g in SC.CERTS: g["items"] = [{"name": n, "img": up(i)} for n, i in g["items"]]
+AW = SC.AWARDS
+AW["feature"]["img_url"] = up(AW["feature"]["img"])
+AW["agc"]["img_url"] = up(AW["agc"]["img"])
+for ser in AW["series"]: ser["items"] = [{"year": y, "img": up(i)} for y, i in ser["years"]]
+SPECIAL = {
+    "our-team": "sp_team.html", "about/culture": "sp_culture.html", "lifetime-warranty": "sp_warranty.html",
+    "construction-process": "sp_process.html", "service-areas": "sp_areas.html", "manufacturer-certifications": "sp_certs.html",
+    "awards": "sp_awards.html", "careers": "sp_careers.html", "about/sell-your-business": "sp_sell.html",
+}
+SPECIAL_CTX = dict(SC=SC, TEAM=TEAM, DEPTS=[d for d, _ in DEPTS if any(m["dept"] == d for m in TEAM)], up=up,
+                   GAF_PC=up("2026/02/Rhoden-Roofing-GAF-President-Club-2-Certification-300x300.png"),
+                   MAP=up("2020/12/100-Miles.png"), PROCESS_IMG=up("2020/12/Proven-Process-Infographic-1-1.jpg"),
+                   GALLERY_PICK=None)
+
 counts = defaultdict(int)
 T = {n: env.get_template(n + ".html") for n in ("home", "page", "article", "term", "glossary", "learning", "areas", "notfound")}
 for slug in sorted(PAGES):
@@ -751,6 +806,13 @@ for slug in sorted(PAGES):
                            filters=[{"slug": c, "label": CATS[c]["name"], "n": len(CATS[c]["posts"]), "href": url_for(c)} for c in (subcats or topcats)],
                            is_cat=(k == "category"))
             html = T["learning"].render(**ctx)
+        elif slug in SPECIAL:
+            areas = [{"href": url_for(a), "label": PAGES[a]["area"], "slug": a,
+                      "res": any(c.startswith(a + "/") and "residential" in c for c in PAGES),
+                      "com": any(c.startswith(a + "/") and "commercial" in c for c in PAGES)} for a in CITIES if "roofing-company" not in a]
+            ctx = page_ctx(slug, areas=areas, counties=[{"href": url_for(c), "label": PAGES[c]["area"]} for c in COUNTIES],
+                           gallery=GALLERY, **SPECIAL_CTX)
+            html = env.get_template(SPECIAL[slug]).render(**ctx)
         elif k == "areas-index":
             ctx = page_ctx(slug, cities=[{"href": url_for(s), "label": PAGES[s]["area"]} for s in CITIES],
                            counties=[{"href": url_for(s), "label": PAGES[s]["area"]} for s in COUNTIES])

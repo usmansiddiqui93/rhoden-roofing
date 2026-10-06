@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Culture & Core Values', lede='Work with a team of roofing professionals you can trust. Four values guide how we treat customers, teammates and every roof we build.' %}{% include "_hero.html" %}{% endwith %}
+<section class="section">
+  <div class="wrap">
+    {% include "_sp_words.html" %}
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Core values</span><h2>What we hold each other to</h2></div><p>The same four values guide hiring, reviews and every decision on a customer's property.</p></div>
+    {% with values=SC.VALUES_CULTURE %}{% include "_sp_values.html" %}{% endwith %}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">How we work</span><h2>What sets us apart</h2></div><p>What sets every company apart is its people, and how it treats them. To our employees we promise this: excellence will always be recognized and rewarded.</p></div>
+    {% include "_sp_apart.html" %}
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">The people</span><h2>Values you can meet in person</h2></div>{% if exists('our-team') %}<a class="btn btn-dark" href="{{ url_for('our-team') }}">Meet all {{ TEAM|length }}</a>{% endif %}</div>
+    <div class="sp-faces">{% for m in TEAM[:12] %}<a href="{{ url_for('our-team') }}#directory" title="{{ m.name }}, {{ m.role }}">{% if m.photo %}<img src="{{ m.photo }}" alt="{{ m.name }}" loading="lazy">{% endif %}<span>{{ m.name }}</span></a>{% endfor %}</div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap sp-split">
+    <div><span class="eyebrow">Our promise</span><h2 class="sec-title">We stand behind our work for the lifetime of your roof</h2><p class="sp-lead">Our pride in workmanship on every project assures we only use the best materials and products. Your project will be completed to your 100% satisfaction. No excuses.</p></div>
+    <div class="sp-actions">{% if exists('lifetime-warranty') %}<a class="btn btn-copper" href="{{ url_for('lifetime-warranty') }}">See the lifetime warranty</a>{% endif %}{% if exists('careers') %}<a class="btn btn-dark" href="{{ url_for('careers') }}">Join the team</a>{% endif %}</div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Lifetime Warranty', lede='Wichita’s only Double-Lifetime Workmanship Warranty. We guarantee our workmanship for any defect in installation for the lifetime of the roof.', actions=true %}{% include "_hero.html" %}{% endwith %}
+<section class="section">
+  <div class="wrap sp-warranty">
+    <div class="sp-warranty-copy">
+      <span class="eyebrow">Our promise to customers</span>
+      <h2 class="sec-title">A warranty measured in lifetimes, not years</h2>
+      {% for p in SC.WARRANTY.promise %}<p class="sp-lead">{{ p }}</p>{% endfor %}
+    </div>
+    <figure class="sp-compare" aria-label="Workmanship warranty length compared">
+      <figcaption>Workmanship warranty</figcaption>
+      <div class="sp-bar"><span class="sp-bar-label">Most Wichita roofers</span><span class="sp-bar-track"><span class="sp-bar-fill short"></span></span><b>1–5 years</b></div>
+      <div class="sp-bar"><span class="sp-bar-label">Rhoden Roofing</span><span class="sp-bar-track"><span class="sp-bar-fill long"></span></span><b>Lifetime of the roof</b></div>
+      <p class="sp-compare-note">Double-Lifetime Workmanship Warranty: any defect in installation, for the life of the roof.</p>
+    </figure>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Why we can offer it</span><h2>Three things we never compromise on</h2></div></div>
+    <div class="sp-pillars">
+      {% for name, kind in SC.WARRANTY.pillars %}
+      <article class="sp-pillar">
+        <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          {% if kind == 'product' %}<path d="M6 24 24 9l18 15"/><path d="M11 21v18h26V21"/><path d="M19 39V28h10v11"/>{% elif kind == 'people' %}<circle cx="17" cy="16" r="6"/><circle cx="33" cy="18" r="5"/><path d="M6 38c1-7 6-11 11-11s10 4 11 11"/><path d="M29 30c2-2 4-3 6-3 4 0 7 3 8 9"/>{% else %}<rect x="9" y="7" width="30" height="35" rx="3"/><path d="m16 18 3 3 6-6"/><path d="M28 19h5"/><path d="m16 30 3 3 6-6"/><path d="M28 31h5"/>{% endif %}
+        </svg>
+        <h3>{{ name }}</h3>
+      </article>
+      {% endfor %}
+    </div>
+    {% if exists('construction-process') %}<p class="sp-center"><a class="btn btn-dark" href="{{ url_for('construction-process') }}">See our five-step process</a></p>{% endif %}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Warranty claims</span><h2>Have a warranty issue? Two steps.</h2></div></div>
+    <ol class="sp-steps sp-steps-2">
+      {% for t, d in SC.WARRANTY.steps %}<li><span class="sp-step-n">{{ loop.index }}</span><div><h3>{{ t }}</h3><p>{{ d }}</p></div></li>{% endfor %}
+    </ol>
+    <div class="sp-callbox"><div><span class="eyebrow">Warranty line</span><a class="sp-phone" href="tel:{{ PHONE_TEL }}">{{ PHONE }}</a><p>Mon–Fri 8:00 am – 5:00 pm · Sat &amp; Sun by appointment</p></div><a class="btn btn-copper" href="tel:{{ PHONE_TEL }}">Call about a warranty claim</a></div>
+  </div>
+</section>
+{% endblock %}

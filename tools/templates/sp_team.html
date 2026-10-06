@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Our Team', lede=(TEAM|length ~ ' roofing professionals in Wichita, Kansas, led by founder John Rhoden since 2008. Project coordinators, claims specialists, crews and the people who keep it all running.'), actions=true %}{% include "_hero.html" %}{% endwith %}
+{% set founder = TEAM|first %}
+<section class="section">
+  <div class="wrap">
+    <article class="sp-founder">
+      <div class="sp-founder-photo">{% if founder.photo %}<img src="{{ founder.photo }}" alt="{{ founder.name }}, {{ founder.role }} of Rhoden Roofing">{% endif %}</div>
+      <div class="sp-founder-copy">
+        <span class="eyebrow">Founder · {{ founder.role }}</span>
+        <h2>{{ founder.name }}</h2>
+        {% for p in founder.bio[:2] %}<p>{{ p }}</p>{% endfor %}
+        {% if founder.bio|length > 2 %}<button class="btn btn-dark" type="button" data-bio="{{ founder.slug }}">Read John's full story</button>{% endif %}
+      </div>
+    </article>
+  </div>
+</section>
+<section class="section alt" id="directory">
+  <div class="wrap">
+    <div class="sec-head"><div><span class="eyebrow">Directory</span><h2>Meet the team</h2></div>
+      <p>Filter by department or search by name. Select anyone to read their story.</p></div>
+    <div class="tools-bar">
+      <label class="search" for="team-q"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="team-q" type="search" placeholder="Search {{ TEAM|length }} people by name or role…"></label>
+      <div class="chips light" id="team-chips">
+        <button class="chip" type="button" data-dept="" aria-pressed="true">Everyone ({{ TEAM|length }})</button>
+        {% for d in DEPTS %}<button class="chip" type="button" data-dept="{{ d }}" aria-pressed="false">{{ d }} ({{ TEAM|selectattr('dept','equalto',d)|list|length }})</button>{% endfor %}
+      </div>
+    </div>
+    <div class="sp-team-grid" id="team-grid">
+      {% for m in TEAM %}
+      <button class="sp-person" type="button" data-bio="{{ m.slug }}" data-dept="{{ m.dept }}" data-search="{{ (m.name ~ ' ' ~ m.role)|lower }}">
+        <span class="sp-person-photo">{% if m.photo %}<img src="{{ m.photo }}" alt="" loading="lazy" decoding="async">{% endif %}</span>
+        <span class="sp-person-body"><strong>{{ m.name }}</strong><span>{{ m.role }}</span><em>{{ 'Read bio' if m.bio else 'Bio coming soon' }}</em></span>
+      </button>
+      <template id="bio-{{ m.slug }}"><div class="sp-dialog-grid"><div class="sp-dialog-photo">{% if m.photo %}<img src="{{ m.photo }}" alt="{{ m.name }}">{% endif %}</div><div><span class="eyebrow">{{ m.dept }}</span><h2>{{ m.name }}</h2><p class="sp-dialog-role">{{ m.role }}</p>{% for p in m.bio %}<p>{{ p }}</p>{% else %}<p>Bio coming soon.</p>{% endfor %}</div></div></template>
+      {% endfor %}
+    </div>
+    <p class="empty" hidden id="team-empty">No one matches that search.</p>
+  </div>
+</section>
+<dialog class="sp-dialog" id="bio-dialog" aria-label="Team member bio"><button class="sp-dialog-close" type="button" aria-label="Close">&times;</button><div class="sp-dialog-body"></div></dialog>
+<section class="section">
+  <div class="wrap sp-split">
+    <div><span class="eyebrow">Careers</span><h2 class="sec-title">Want to work with this team?</h2><p class="sp-lead">Rhoden Roofing hires for character first. Read how we work, what we offer and how our hiring process runs.</p></div>
+    <div class="sp-actions">{% if exists('careers') %}<a class="btn btn-copper" href="{{ url_for('careers') }}">See careers</a>{% endif %}{% if exists('about/culture') %}<a class="btn btn-dark" href="{{ url_for('about/culture') }}">Our culture and values</a>{% endif %}</div>
+  </div>
+</section>
+{% endblock %}

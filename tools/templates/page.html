@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block main %}
+{% set lede = P.lede or (P.description if P.description|length < 200 else '') %}
+{% with actions=true, eyebrow=('Serving ' ~ P.area ~ ', Kansas') if P.area else 'Rhoden Roofing · Wichita, KS' %}{% include "_hero.html" %}{% endwith %}
+<section class="page-body">
+  <div class="wrap with-side">
+    <div class="prose">
+      {% if is_form %}
+      <div class="contact-inline">{% include "_form.html" %}</div>
+      {% endif %}
+      {{ P.html|safe }}
+      {% if children %}
+      <h2>Explore {{ P.title }}</h2>
+      {% with items=children %}{% include "_cards.html" %}{% endwith %}
+      {% endif %}
+    </div>
+    <aside class="side">
+      {% include "_side_cta.html" %}
+      {% if side %}
+      <div class="side-list"><h4>{{ side.label }}</h4><ul>
+        {% if side.head %}<li><a href="{{ side.head.href }}"{% if side.head.slug == slug %} aria-current="page"{% endif %}>{{ side.head.label }}</a></li>{% endif %}
+        {% for i in side['items'] %}{% if not side.head or i.slug != side.head.slug %}<li><a href="{{ i.href }}"{% if i.slug == slug %} aria-current="page"{% endif %}>{{ i.label }}</a></li>{% endif %}{% endfor %}
+      </ul></div>
+      {% endif %}
+      {% if P.area and CITIES %}
+      <div class="side-list"><h4>Nearby service areas</h4><ul>
+        {% for s in CITIES[:8] %}{% if s != slug %}<li><a href="{{ url_for(s) }}">{{ PAGES[s].area }}</a></li>{% endif %}{% endfor %}
+        {% if exists('service-areas') %}<li><a href="{{ url_for('service-areas') }}">All service areas</a></li>{% endif %}
+      </ul></div>
+      {% endif %}
+    </aside>
+  </div>
+</section>
+{% if related %}
+<section class="section alt">
+  <div class="wrap">
+    <span class="eyebrow">From the Learning Center</span>
+    <h2 class="sec-title">Related reading</h2>
+    {% with items=related %}{% include "_cards.html" %}{% endwith %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}{% if is_form %}<script>{% include "_form.js" %}</script>{% endif %}{% endblock %}

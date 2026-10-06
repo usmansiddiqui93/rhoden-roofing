@@ -1,0 +1,8 @@
+<div class="cards">
+{% for c in items %}
+  <a class="pcard" href="{{ c.href }}">
+    <div class="ph">{% if c.img %}<img loading="lazy" src="{{ c.img }}" alt="">{% endif %}</div>
+    <div class="bd">{% if c.cat or c.date %}<span class="meta">{{ c.cat }}{% if c.cat and c.date %} · {% endif %}{{ c.date }}</span>{% endif %}<h3>{{ c.title }}</h3>{% if c.excerpt %}<p>{{ c.excerpt|truncate(150) }}</p>{% endif %}<span class="more">Read more →</span></div>
+  </a>
+{% endfor %}
+</div>

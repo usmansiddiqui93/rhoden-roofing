@@ -1,0 +1,64 @@
+
+document.documentElement.classList.add('js');
+
+// Reviews (verbatim from Google via the live site)
+const REVIEWS=[
+ {n:"Lisa Skaff Hayes",a:"images/review-6.jpg",t:"From start to finish, the team went over and beyond. Our sales rep moved us up on the schedule due to issues our damaged roof was causing to our home, the installation crew worked late into the evening to try to finish in the day timeline they estimated, and the insurance team was very responsive and wrapped up the claim quickly. Highly recommend Rhoden Roofing!"},
+ {n:"Sharon Hamilton",a:"images/review-9.jpg",t:"Patrick Mosley was Extremely Helpful for the Roof Inspection & did a Detailed Thorough Estimate including Pictures of everything we needed done to protect our Home for many years to come. Walking us through the whole procedure from beginning to end. Lachlan Jones & Jose Ramirez along with their Crew did an Incredible Job to complete this Re-Roofing Procedure in a timely & efficient manner. Very Conscientious in cleaning up after themselves & being careful to preserve & protect our Landscaping. Thank You Rhoden Roofing, We Appreciate each & every one of You! True Quality Service!\n\nMike & Sharon Hamilton"},
+ {n:"Deb Rockhoff",a:"images/review-2.jpg",t:"Five solid gold stars for James R. and his crew at Rhoden Roofing!\n\nFrom the very beginning to the end of the project, their communication was excellent. Every step of the process was explained clearly, and they were always responsive to questions. You can tell this crew is a true team—they worked efficiently, professionally, and with great attention to detail.\n\nEvery single person I interacted with was courteous and professional, and the entire crew went above and beyond to make sure the job was done right. Great customer service is hard to find these days, but James and his team absolutely delivered.\n\nI highly recommend Rhoden Roofing to anyone looking for quality workmanship and exceptional customer service."},
+ {n:"Andrea",a:"images/review-5.jpg",t:"Pat was professional and courteous! He answered our questions thoroughly about our upcoming roof repair. Excellent customer service!"},
+ {n:"Steve Bryant",a:"images/review-3.jpg",t:"Rhoden Roofing in Wichita, KS is the finest roofing company that I have ever dealt with. They are thorough, courteous and highly competent folks…the kind of people that you’d like to have on your side when it comes to a major expenditure like replacing your roof!\nRhoden was initially recommended by a neighbor. We contacted Rhoden and asked for an estimate while we began to investigate the company over the next several weeks. The consensus about the kind of standards that this company held itself to were very high, as we learned from reading reviews and talking to several of their customers.\nWe ended up selecting Rhoden and I’d like to talk about their staff:\n• The first person that we met was James Telfer. James came out and met us and discussed our roofing needs due to hail damage. Although James did bid our job and functioned as a sales person, his title with the company is Project Coordinator and that’s exactly what he did. James coordinated our roof and gutter project from start to finish. He is extremely committed to both the customer and his company…you couldn’t ask for better.\n• When it came time to replace the roof, Drake Zogleman was the foreman of our crew. We have a tall two-story house in College Hill with a steep pitch that required special care and techniques to get the old roof down and the new roof up. Drake and his nine-man crew did a superb job all in a single 10 hour day. It was amazing display of skill and teamwork. They covered up the ground and our plants and cleaned everything up in a fine fashion…no complaints. The work flow was smooth and the shingles are straight, well-nailed with proper drip edges, flashing, etc.\n• When our job was completed, Logan Gossett, a Customer Relations specialist with Rhoden cam out and inspected our roof both from the ground and via a drone that documented the condition of the roof. Logan sent us the digital files for the drone pictures. Then he went over our warranty for the roof. This level of service after the installation of the roof is really top-drawer!\n• Kyle Mitchel, a Claim Specialist with Rhoden, communicated the necessary information with our insurance company.\n• Sarah Linder in the Accounting department at Rhoden answered all of our questions regarding payments, etc.\nRhoden provided excellent service in every way at a fair and reasonable price. If you need a roof, you owe it to yourself to consult Rhoden before you make a decision as to which contractor you’re going to use!"},
+ {n:"Dan Guzman",a:"images/review-8.jpg",t:"Awesome experience! Finished in one day and looks fabulous! Jerrod, Haley, and Jose were all incredible. I can’t recommend them enough."},
+ {n:"Carol Natanson",a:"images/review-11.jpg",t:"I want to thank Rhoden Roofing for their reputable, professional, and friendly experience in replacing my roof.\nI'd like to give particular recognition to Jerrod Byrne, the Project Coordinator, who provided the estimate and oversight of the project. I had never bought a roof before and Jerrod held my hand (figuratively speaking) through the entire process. His explanations and thoroughness were invaluable. He was knowledgeable, articulate, and supportive. I couldn't have asked for a better person to work with.\nI would also like to recognize and thank Chris Primm who was the On-site Supervisor of the installation. He was present and available throughout the installation. He paid close attention that the job was done right and was helpful and polite.\nIn addition, while I haven't met Kyle Mitchell in person, he managed the insurance claim and did a great job. I'm very grateful to him.\nI highly recommend Rhoden Roofing if you're looking for a reputable and professional, and friendly experience.\nP.S. The roof looks Fantastic! I'm very pleased."},
+ {n:"Moises Rodriguez",a:"images/review-7.jpg",t:"I worked with Shawn for a quote. The experience was seamless and he made it quite easy to understand any portion that I was confused on. From what I can tell, the team is well educated and has earned my respect. I’d recommend working with Shawn - great communicator and is on top of things."},
+ {n:"clinton lee",a:"images/review-4.jpg",t:"Rhoden’s crews did an outstanding job replacing the roofs on both of our properties, our primary home and rental property. We couldn’t be more pleased with the work they did. James and Lakeland were phenomenal foremen and made the process very smooth."},
+ {n:"Rhiannon Rogers",a:"images/review-10.jpg",t:"Braden was very efficient and quick!"}
+];
+const track=document.getElementById('revTrack');
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+track.innerHTML=REVIEWS.map(r=>{
+  const long=r.t.length>380;
+  return `<article class="rev${long?' clamp':''}">
+    <header><img loading="lazy" src="${r.a}" alt=""><div><strong>${esc(r.n)}</strong><span>Google review</span></div></header>
+    <div class="stars" aria-label="5 out of 5 stars">★★★★★</div>
+    <p>${esc(r.t)}</p>
+    ${long?'<button class="toggle" type="button">Read full review</button>':''}
+  </article>`;}).join('');
+track.addEventListener('click',e=>{
+  const b=e.target.closest('.toggle');if(!b)return;
+  const card=b.closest('.rev');const open=card.classList.toggle('clamp');
+  b.textContent=open?'Read full review':'Show less';
+});
+document.querySelectorAll('.rev-nav .arrows button').forEach(b=>b.addEventListener('click',()=>{
+  track.scrollBy({left:(+b.dataset.dir)*(track.clientWidth*.85),behavior:'smooth'});
+}));
+
+// Mobile nav
+const nav=document.getElementById('nav'),mb=document.querySelector('.menu-btn');
+const setNav=o=>{nav.classList.toggle('open',o);mb.setAttribute('aria-expanded',o)};
+mb.addEventListener('click',()=>setNav(true));
+document.querySelector('.nav-close').addEventListener('click',()=>setNav(false));
+nav.addEventListener('click',e=>{if(e.target.closest('a'))setNav(false)});
+
+// YouTube facade
+document.querySelectorAll('[data-yt]').forEach(v=>v.addEventListener('click',()=>{
+  v.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${v.dataset.yt}?autoplay=1&rel=0" title="Rhoden Roofing video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;
+},{once:true}));
+
+// Form: Netlify handles it natively; elsewhere show a friendly confirmation
+const form=document.getElementById('estimateForm');
+form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const data=new URLSearchParams(new FormData(form)).toString();
+  let ok=false;
+  try{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:data});ok=r.ok}catch(_){}
+  form.innerHTML=ok
+   ?'<div class="form-ok">Thanks! Your estimate request is in. A Rhoden Roofing team member will contact you shortly.</div>'
+   :'<div class="form-ok">Thanks! This is a staging site, so the form isn’t connected yet. Please call (316) 927-2233 to schedule your free estimate.</div>';
+});
+
+// Gentle reveal (content is visible by default; only animates if below the fold)
+if('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+  const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.remove('pre');io.unobserve(en.target)}}),{rootMargin:'0px 0px -8% 0px'});
+  document.querySelectorAll('.rv').forEach(el=>{if(el.getBoundingClientRect().top>innerHeight){el.classList.add('pre');io.observe(el)}});
+}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block main %}
+<section class="notfound wrap">
+  <span class="eyebrow">Error 404</span>
+  <h1>Off the roof</h1>
+  <p style="max-width:46ch;margin:16px auto 28px;color:var(--muted)">That page isn’t here. Try the homepage, browse the Learning Center, or call us at {{ PHONE }}.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a class="btn btn-dark" href="{{ BASE }}">Back to Home</a>
+    {% if exists("learning-center") %}<a class="btn btn-copper" href="{{ url_for('learning-center') }}">Learning Center</a>{% endif %}
+  </div>
+</section>
+{% endblock %}

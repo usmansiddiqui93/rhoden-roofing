@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Wichita Roofing Contractor | Rhoden Roofing, LLC{% endblock %}
+{% block main %}{{ home_main|safe }}{% endblock %}
+{% block cta %}{% endblock %}
+{% block scripts %}<script>
+document.documentElement.classList.add('js');
+{% include "_home_reviews.js" %}
+</script>{% endblock %}

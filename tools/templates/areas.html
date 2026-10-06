@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Service Areas', lede=(P.lede or 'Rhoden Roofing serves Wichita and communities across south-central Kansas, from Sedgwick County to Salina, Topeka and beyond.'), actions=true %}{% include "_hero.html" %}{% endwith %}
+<section class="page-body">
+  <div class="wrap">
+    <span class="eyebrow">Cities &amp; towns</span>
+    <h2 class="sec-title">Roofers near you</h2>
+    <div class="area-grid">{% for a in cities %}<a href="{{ a.href }}">{{ a.label }}</a>{% endfor %}</div>
+    {% if counties %}
+    <span class="eyebrow" style="display:block;margin-top:50px">Counties</span>
+    <h2 class="sec-title">Counties we serve</h2>
+    <div class="area-grid">{% for a in counties %}<a href="{{ a.href }}">{{ a.label }}</a>{% endfor %}</div>
+    {% endif %}
+    {% if P.html %}<div class="prose" style="margin-top:50px;max-width:820px">{{ P.html|safe }}</div>{% endif %}
+  </div>
+</section>
+{% endblock %}

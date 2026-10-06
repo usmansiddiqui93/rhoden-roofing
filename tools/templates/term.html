@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block main %}
+{% with eyebrow='Roofing Glossary', chips=gcats %}{% include "_hero.html" %}{% endwith %}
+<section class="page-body">
+  <div class="wrap with-side">
+    <div class="prose">
+      <div class="def"><div class="lead">{{ P.html|safe }}</div></div>
+      {% if same %}
+      <h2>Related terms</h2>
+      <div class="gl-list">{% for t in same %}<a class="gl-item" href="{{ t.href }}"><strong>{{ t.title }}</strong><span>{{ t.short|truncate(120) }}</span></a>{% endfor %}</div>
+      {% endif %}
+      {% if mentions %}
+      <h2>Articles that mention {{ P.title }}</h2>
+      {% with items=mentions %}{% include "_cards.html" %}{% endwith %}
+      {% endif %}
+      <p><a href="{{ url_for('glossary') }}">← Back to the full roofing glossary</a></p>
+    </div>
+    <aside class="side">{% include "_side_cta.html" %}
+      {% if gcats %}<div class="side-list"><h4>Glossary categories</h4><ul>{% for c in gcats %}<li><a href="{{ c.href }}">{{ c.label }}</a></li>{% endfor %}</ul></div>{% endif %}
+    </aside>
+  </div>
+</section>
+{% endblock %}

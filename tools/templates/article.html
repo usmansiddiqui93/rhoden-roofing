@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block main %}
+{% set meta = [P.date, (P.minutes ~ ' min read') if P.minutes else '', 'By Rhoden Roofing']|select|list %}
+{% with article=true, eyebrow='Learning Center', chips=cats %}{% include "_hero.html" %}{% endwith %}
+<section class="page-body">
+  <div class="wrap with-side">
+    <article class="prose">
+      {% if P.image and P.image != P.first_img %}<figure><img src="{{ P.image }}" alt="{{ P.title }}"></figure>{% endif %}
+      {{ P.html|safe }}
+      <div class="pager">
+        {% if newer %}<a href="{{ newer.href }}"><small>← Newer article</small><strong>{{ newer.title }}</strong></a>{% endif %}
+        {% if older %}<a href="{{ older.href }}"><small>Older article →</small><strong>{{ older.title }}</strong></a>{% endif %}
+      </div>
+    </article>
+    <aside class="side">
+      {% if P.toc|length > 2 %}
+      <div class="side-list toc"><h4>In this article</h4><ol>{% for t, i in P.toc %}<li><a href="#{{ i }}">{{ t }}</a></li>{% endfor %}</ol></div>
+      {% endif %}
+      {% include "_side_cta.html" %}
+      {% if cats %}<div class="side-list"><h4>Topics</h4><ul>{% for c in cats %}<li><a href="{{ c.href }}">{{ c.label }}</a></li>{% endfor %}</ul></div>{% endif %}
+    </aside>
+  </div>
+</section>
+{% if related %}
+<section class="section alt">
+  <div class="wrap">
+    <span class="eyebrow">Keep reading</span>
+    <h2 class="sec-title">Related articles</h2>
+    {% with items=related %}{% include "_cards.html" %}{% endwith %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

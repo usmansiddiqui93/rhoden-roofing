@@ -1,0 +1,17 @@
+<form class="estimate" name="estimate" method="POST" action="{{ BASE }}thanks.html" id="estimateForm">
+  <input type="hidden" name="form-name" value="estimate">
+  <span class="eyebrow">No cost · No obligation</span>
+  <h3>Get a Free Estimate</h3>
+  <div class="row">
+    <label for="f-name">Full name<input id="f-name" name="name" required autocomplete="name"></label>
+    <label for="f-phone">Phone<input id="f-phone" name="phone" type="tel" required autocomplete="tel"></label>
+  </div>
+  <label for="f-email">Email<input id="f-email" name="email" type="email" autocomplete="email"></label>
+  <label for="f-addr">Property address<input id="f-addr" name="address" autocomplete="street-address"></label>
+  <label for="f-type">I need help with
+    <select id="f-type" name="service"><option>Roof replacement</option><option>Roof repair</option><option>Hail / storm damage inspection</option><option>Commercial roofing</option><option>Multi-family roofing</option><option>Gutters</option><option>Something else</option></select>
+  </label>
+  <label for="f-msg">Tell us about your roof<textarea id="f-msg" name="message"></textarea></label>
+  <button class="btn btn-copper" type="submit">Request My Free Estimate</button>
+  <p class="fine">Prefer to talk? Call <a href="tel:{{ PHONE_TEL }}">{{ PHONE }}</a>.</p>
+</form>

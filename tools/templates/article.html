@@ -1,24 +1,28 @@
 {% extends "base.html" %}
 {% block main %}
-{% set meta = ['By ' ~ AUTHOR.name, ('Updated ' ~ P.updated) if P.updated else P.date, (P.minutes ~ ' min read') if P.minutes else '']|select|list %}
+{% set A = P.author or AUTHOR %}
+{% set meta = ['By ' ~ A.name, ('Updated ' ~ P.updated) if P.updated else P.date, (P.minutes ~ ' min read') if P.minutes else '']|select|list %}
 {% with article=true, eyebrow='Learning Center', chips=cats %}{% include "_hero.html" %}{% endwith %}
 <section class="page-body">
   <div class="wrap with-side">
     <article class="prose">
       {% if P.image and P.image != P.first_img %}<figure><img src="{{ P.image }}" alt="{{ P.title }}"></figure>{% endif %}
       {{ P.html|safe }}
-      <aside class="author-box" id="author" aria-label="About the author">
-        <div class="ab-mark"><img src="{{ AUTHOR.logo }}" alt="" width="72" height="72" loading="lazy"></div>
+      <aside class="author-box{% if A.person %} person{% endif %}" id="author" aria-label="About the author">
+        {% if A.person and A.photo %}<div class="ab-photo"><img src="{{ A.photo }}" alt="{{ A.name }}, {{ A.role }} at Rhoden Roofing" width="120" height="120" loading="lazy"></div>
+        {% else %}<div class="ab-mark"><img src="{{ A.logo }}" alt="" width="72" height="72" loading="lazy"></div>{% endif %}
         <div class="ab-body">
           <span class="eyebrow">Written by</span>
-          <h2 class="ab-name">{{ AUTHOR.name }}</h2>
-          <p class="ab-title">{{ AUTHOR.title }}{% if P.date %} · Published {{ P.date }}{% endif %}{% if P.updated %} · Updated {{ P.updated }}{% endif %}</p>
-          <p class="ab-bio">{{ AUTHOR.bio }}</p>
-          <ul class="ab-creds">{% for c in AUTHOR.creds %}<li>{{ c }}</li>{% endfor %}</ul>
+          <h2 class="ab-name">{{ A.name }}</h2>
+          <p class="ab-title">{{ A.title }}{% if P.date %} · Published {{ P.date }}{% endif %}{% if P.updated %} · Updated {{ P.updated }}{% endif %}</p>
+          {% if A.person %}{% for b in A.bio_paras %}<p class="ab-bio">{{ b }}</p>{% endfor %}
+          <p class="ab-co"><img src="{{ A.logo }}" alt="" width="22" height="22"> Rhoden Roofing · Wichita roofing contractor since 2008</p>
+          {% else %}<p class="ab-bio">{{ A.bio }}</p>{% endif %}
+          <ul class="ab-creds">{% for c in A.creds %}<li>{{ c }}</li>{% endfor %}</ul>
           <div class="ab-links">
-            <a href="{{ AUTHOR.team_href }}">Meet the team</a>
-            <a href="{{ AUTHOR.certs_href }}">Certifications</a>
-            {% if AUTHOR.rating %}<a href="{{ AUTHOR.reviews_href }}"><span class="ab-stars" aria-hidden="true">★</span> {{ AUTHOR.rating }} from {{ AUTHOR.count }}</a>{% endif %}
+            <a href="{{ A.team_href }}">{{ 'More about ' ~ A.name.split(' ')[0] if A.person else 'Meet the team' }}</a>
+            <a href="{{ A.certs_href }}">Certifications</a>
+            {% if A.rating %}<a href="{{ A.reviews_href }}"><span class="ab-stars" aria-hidden="true">★</span> {{ A.rating }} from {{ A.count }}</a>{% endif %}
             <a class="ab-call" href="tel:{{ PHONE_TEL }}">Questions? {{ PHONE }}</a>
           </div>
         </div>

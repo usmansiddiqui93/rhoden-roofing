@@ -5,7 +5,7 @@
     {% if eyebrow %}<span class="eyebrow">{{ eyebrow }}</span>{% endif %}
     <h1>{{ P.title }}</h1>
     {% if lede %}<p class="lede">{{ lede }}</p>{% endif %}
-    {% if meta %}<div class="meta">{% for m in meta %}<span>{{ m }}</span>{% endfor %}</div>{% endif %}
+    {% if meta %}<div class="meta">{% if article and A is defined and A %}<a class="by-av{% if not A.person %} co{% endif %}" href="#author" aria-label="About the author"><img src="{{ A.photo if A.person and A.photo else A.logo }}" alt="" width="40" height="40"></a>{% endif %}{% for m in meta %}<span>{{ m }}</span>{% endfor %}</div>{% endif %}
     {% if chips %}<div class="chips">{% for c in chips %}<a class="chip" href="{{ c.href }}">{{ c.label }}</a>{% endfor %}</div>{% endif %}
     {% if actions %}<div class="actions"><a class="btn btn-copper" href="{{ ESTIMATE }}">Get a Free Estimate</a><a class="btn btn-ghost" href="tel:{{ PHONE_TEL }}">Call {{ PHONE }}</a></div>{% endif %}
   </div>

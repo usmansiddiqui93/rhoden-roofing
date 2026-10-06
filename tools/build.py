@@ -506,6 +506,7 @@ for p in API_POSTS:
     if ps in PAGES:
         if p.get("date"): PAGES[ps]["iso"] = p["date"]
         if p.get("modified"): PAGES[ps]["modified_iso"] = p["modified"]
+        if p.get("author"): PAGES[ps]["wp_author"] = p["author"]
         fm = p.get("featured_media")
         if fm and MEDIA.get(fm): PAGES[ps]["image"] = local_img(MEDIA[fm]) or PAGES[ps]["image"]
 ARTICLES = [s for s in PAGES if PAGES[s]["kind"] == "article"]
@@ -821,6 +822,19 @@ AUTHOR = dict(SC.AUTHOR, logo=G["ICON"], team_href=url_for("our-team"), certs_hr
               reviews_href=url_for("customer-reviews"), awards_href=url_for("awards"),
               rating=REVIEWS["rating"] if REVIEWS else None, count=REVIEWS["count"] if REVIEWS else None)
 env.globals["AUTHOR"] = AUTHOR
+TEAM_BY_SLUG = {m["slug"]: m for m in TEAM}
+def person_author(v):
+    m = TEAM_BY_SLUG.get(v) if isinstance(v, str) else dict(v, photo=up(v.get("photo")))
+    if not m: return None
+    bio = [b for b in m.get("bio", []) if not re.match(r"outside of work", b, re.I)][:2] if isinstance(m.get("bio"), list) else [m.get("bio", "")]
+    return dict(AUTHOR, person=True, name=m["name"], role=m["role"], photo=m.get("photo"), bio_paras=bio,
+                title=m["role"] + " at Rhoden Roofing")
+AUTHOR_PEOPLE = {k: person_author(v) for k, v in SC.AUTHORS_BY_WP_ID.items()}
+n_named = 0
+for s_ in ARTICLES:
+    a = AUTHOR_PEOPLE.get(PAGES[s_].get("wp_author"))
+    if a: PAGES[s_]["author"] = a; n_named += 1
+log("articles with a named author:", n_named)
 
 SPECIAL = {
     "our-team": "sp_team.html", "about/culture": "sp_culture.html", "lifetime-warranty": "sp_warranty.html",

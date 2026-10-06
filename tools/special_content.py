@@ -147,4 +147,8 @@ AUTHOR = {  # shown in the author box on every Learning Center article
            "informed decision about yours.",
     "creds": ["GAF President’s Club", "GAF Master Elite", "HAAG Certified Inspectors", "2025 Wichita Small Business of the Year"],
 }
-AUTHORS_BY_WP_ID = {}  # e.g. {9: {"name": "...", "title": "...", "bio": "...", "photo": "2024/..."}} to credit a named expert
+# WordPress author account -> person on the Our Team page. Taken from the author archive links on the live site:
+# 67 = /author/logan-gossett/, 10 = /author/seth-pearson/. Not mapped (no team profile or photo):
+# 9 = /author/matthew/, 69 = /author/megan-baker/, 3 = /author/roofermarketers/ (agency account).
+# Values are Our Team slugs, or a dict {"name","role","bio","photo"} for someone not on the team page.
+AUTHORS_BY_WP_ID = {67: "logan-gossett", 10: "seth-pearson"}

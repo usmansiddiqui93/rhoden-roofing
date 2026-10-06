@@ -137,3 +137,14 @@ SELL = {
     "options": "If you are looking to get out of the roofing business, or get relief from the financial worry of running a business day-to-day, consider joining the stability of Rhoden Roofing. We are open to both a departing sale, or a transition period where the departing owner stays on as location manager.",
     "states": ["Kansas", "Missouri", "Oklahoma", "Arkansas"],
 }
+
+AUTHOR = {  # shown in the author box on every Learning Center article
+    "name": "Rhoden Roofing",
+    "title": "Wichita roofing contractor since 2008",
+    "bio": "Rhoden Roofing was founded in Wichita by John Rhoden in 2008 and installs, repairs and replaces "
+           "residential and commercial roofs across Wichita and south-central Kansas. Our Learning Center articles "
+           "explain what our project coordinators, inspectors and crews see on Kansas roofs, so you can make an "
+           "informed decision about yours.",
+    "creds": ["GAF President’s Club", "GAF Master Elite", "HAAG Certified Inspectors", "2025 Wichita Small Business of the Year"],
+}
+AUTHORS_BY_WP_ID = {}  # e.g. {9: {"name": "...", "title": "...", "bio": "...", "photo": "2024/..."}} to credit a named expert

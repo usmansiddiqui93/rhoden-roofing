@@ -1,12 +1,28 @@
 {% extends "base.html" %}
 {% block main %}
-{% set meta = [P.date, (P.minutes ~ ' min read') if P.minutes else '', 'By Rhoden Roofing']|select|list %}
+{% set meta = ['By ' ~ AUTHOR.name, ('Updated ' ~ P.updated) if P.updated else P.date, (P.minutes ~ ' min read') if P.minutes else '']|select|list %}
 {% with article=true, eyebrow='Learning Center', chips=cats %}{% include "_hero.html" %}{% endwith %}
 <section class="page-body">
   <div class="wrap with-side">
     <article class="prose">
       {% if P.image and P.image != P.first_img %}<figure><img src="{{ P.image }}" alt="{{ P.title }}"></figure>{% endif %}
       {{ P.html|safe }}
+      <aside class="author-box" id="author" aria-label="About the author">
+        <div class="ab-mark"><img src="{{ AUTHOR.logo }}" alt="" width="72" height="72" loading="lazy"></div>
+        <div class="ab-body">
+          <span class="eyebrow">Written by</span>
+          <h2 class="ab-name">{{ AUTHOR.name }}</h2>
+          <p class="ab-title">{{ AUTHOR.title }}{% if P.date %} · Published {{ P.date }}{% endif %}{% if P.updated %} · Updated {{ P.updated }}{% endif %}</p>
+          <p class="ab-bio">{{ AUTHOR.bio }}</p>
+          <ul class="ab-creds">{% for c in AUTHOR.creds %}<li>{{ c }}</li>{% endfor %}</ul>
+          <div class="ab-links">
+            <a href="{{ AUTHOR.team_href }}">Meet the team</a>
+            <a href="{{ AUTHOR.certs_href }}">Certifications</a>
+            {% if AUTHOR.rating %}<a href="{{ AUTHOR.reviews_href }}"><span class="ab-stars" aria-hidden="true">★</span> {{ AUTHOR.rating }} from {{ AUTHOR.count }}</a>{% endif %}
+            <a class="ab-call" href="tel:{{ PHONE_TEL }}">Questions? {{ PHONE }}</a>
+          </div>
+        </div>
+      </aside>
       <div class="pager">
         {% if newer %}<a href="{{ newer.href }}"><small>← Newer article</small><strong>{{ newer.title }}</strong></a>{% endif %}
         {% if older %}<a href="{{ older.href }}"><small>Older article →</small><strong>{{ older.title }}</strong></a>{% endif %}

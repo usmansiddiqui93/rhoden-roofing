@@ -505,6 +505,7 @@ for p in API_POSTS:
     api_post_cats[ps] = [slug_of(CAT_BY_ID[c]["link"]) for c in p.get("categories", []) if c in CAT_BY_ID]
     if ps in PAGES:
         if p.get("date"): PAGES[ps]["iso"] = p["date"]
+        if p.get("modified"): PAGES[ps]["modified_iso"] = p["modified"]
         fm = p.get("featured_media")
         if fm and MEDIA.get(fm): PAGES[ps]["image"] = local_img(MEDIA[fm]) or PAGES[ps]["image"]
 ARTICLES = [s for s in PAGES if PAGES[s]["kind"] == "article"]
@@ -545,6 +546,10 @@ for s in ARTICLES:
         try: P["date"] = datetime.fromisoformat(P["iso"][:19]).strftime("%b %d, %Y")
         except Exception: pass
     P["minutes"] = max(1, round(P.get("words", 0) / 230))
+    mi = P.get("modified_iso")
+    if mi and P.get("iso") and mi[:10] > P["iso"][:10]:
+        try: P["updated"] = datetime.fromisoformat(mi[:19]).strftime("%b %d, %Y")
+        except Exception: pass
 
 # glossary
 TERMS = sorted([s for s in PAGES if PAGES[s]["kind"] == "term"], key=lambda s: ptitle(s).lower())
@@ -756,15 +761,77 @@ AW = SC.AWARDS
 AW["feature"]["img_url"] = up(AW["feature"]["img"])
 AW["agc"]["img_url"] = up(AW["agc"]["img"])
 for ser in AW["series"]: ser["items"] = [{"year": y, "img": up(i)} for y, i in ser["years"]]
+
+# ---- customer reviews (Google reviews widget on /customer-reviews/)
+REVIEW_TOPICS = [
+    ("Insurance claims", r"insurance|claim|adjuster|deductible"),
+    ("Hail and storms", r"hail|storm|wind damage|tornado"),
+    ("Roof replacement", r"replac|new roof|re-?roof"),
+    ("Repairs and leaks", r"repair|leak"),
+    ("Gutters", r"gutter"),
+    ("Clean-up", r"clean|debris|nails"),
+    ("Communication", r"communicat|responsive|informed|updates|kept us|kept me"),
+]
+def parse_reviews():
+    if "customer-reviews" not in HTML: return None
+    soup = BeautifulSoup(open(HTML["customer-reviews"], encoding="utf-8", errors="ignore").read(), "lxml")
+    w = soup.select_one(".gmbrr")
+    if not w: return None
+    out = []
+    for li in w.select("ul.listing > li"):
+        name = li.select_one(".author-name").get_text(" ", strip=True)
+        cls = " ".join(li.get("class", []))
+        stars = int(re.search(r"rating-(\d)", cls).group(1)) if re.search(r"rating-(\d)", cls) else 5
+        parts = [x.get_text(" ", strip=True) for x in li.select(".review-snippet, .review-full-text")]
+        text = " ".join(parts).strip()
+        if not text: continue
+        text = re.sub(r"\s+", " ", text)
+        topics = [t for t, pat in REVIEW_TOPICS if re.search(pat, text, re.I)]
+        initials = "".join(x[0] for x in name.split()[:2] if x[:1].isalpha()).upper() or "★"
+        out.append({"name": name, "stars": stars, "text": text, "topics": topics, "initials": initials,
+                    "long": len(text) > 420, "hue": sum(map(ord, name)) % 4})
+    num = w.select_one(".rating .number")
+    cnt = w.select_one(".rating .count")
+    # team members customers mention by first name (only first names unique on the team)
+    firsts = defaultdict(list)
+    for m in TEAM: firsts[m["name"].split()[0]].append(m)
+    mentions = []
+    for fn, ms in firsts.items():
+        if len(ms) != 1 or len(fn) < 3: continue
+        n = sum(1 for r in out if re.search(r"\b%s\b" % re.escape(fn), r["text"]))
+        if n >= 2: mentions.append(dict(ms[0], n=n, first=fn))
+    mentions.sort(key=lambda m: -m["n"])
+    feature = sorted([r for r in out if 260 < len(r["text"]) < 520], key=lambda r: -len(r["topics"]))[:3]
+    closing = None
+    secs = (soup.select_one(".et-l--body") or soup.select_one("#main-content")).select(".et_pb_section")
+    if secs:
+        last = secs[-1]
+        h = last.find(["h1", "h2", "h3"]); ps = [p.get_text(" ", strip=True) for p in last.find_all("p") if p.get_text(strip=True)]
+        if h: closing = {"title": h.get_text(" ", strip=True), "paras": ps}
+    return {"items": out, "rating": num.get_text(strip=True) if num else "4.9",
+            "count": cnt.get_text(strip=True) if cnt else "", "url": cnt.get("href") if cnt else "",
+            "topics": [(t, sum(1 for r in out if t in r["topics"])) for t, _ in REVIEW_TOPICS],
+            "mentions": mentions[:8], "feature": feature, "closing": closing}
+REVIEWS = parse_reviews()
+log("reviews:", len(REVIEWS["items"]) if REVIEWS else 0)
+
+# ---- author box on every article. All posts are bylined "Rhoden Roofing" on the live site; to credit a
+# named expert later, add an entry to SC.AUTHORS_BY_WP_ID keyed by the WordPress author id.
+AUTHOR = dict(SC.AUTHOR, logo=G["ICON"], team_href=url_for("our-team"), certs_href=url_for("manufacturer-certifications"),
+              reviews_href=url_for("customer-reviews"), awards_href=url_for("awards"),
+              rating=REVIEWS["rating"] if REVIEWS else None, count=REVIEWS["count"] if REVIEWS else None)
+env.globals["AUTHOR"] = AUTHOR
+
 SPECIAL = {
     "our-team": "sp_team.html", "about/culture": "sp_culture.html", "lifetime-warranty": "sp_warranty.html",
     "construction-process": "sp_process.html", "service-areas": "sp_areas.html", "manufacturer-certifications": "sp_certs.html",
     "awards": "sp_awards.html", "careers": "sp_careers.html", "about/sell-your-business": "sp_sell.html",
+    **({"customer-reviews": "sp_reviews.html"} if REVIEWS else {}),
 }
 SPECIAL_CTX = dict(SC=SC, TEAM=TEAM, DEPTS=[d for d, _ in DEPTS if any(m["dept"] == d for m in TEAM)], up=up,
                    GAF_PC=up("2026/02/Rhoden-Roofing-GAF-President-Club-2-Certification-300x300.png"),
                    MAP=up("2020/12/100-Miles.png"), PROCESS_IMG=up("2020/12/Proven-Process-Infographic-1-1.jpg"),
-                   GALLERY_PICK=None)
+                   GALLERY_PICK=None, REVIEWS=REVIEWS)
 
 counts = defaultdict(int)
 T = {n: env.get_template(n + ".html") for n in ("home", "page", "article", "term", "glossary", "learning", "areas", "notfound")}

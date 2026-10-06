@@ -234,4 +234,37 @@
       form.innerHTML = '<div class="form-ok">Thanks! This is a staging site, so this form isn’t connected yet. Please call (316) 927-2233 and we’ll take it from there.</div>';
     });
   });
+
+  // Customer reviews: topic filter, search, load more, expand
+  var rvGrid = $('#rv-grid');
+  if (rvGrid) {
+    var cards = $$('.rv-card', rvGrid), topic = '', rq = '', shown = 24, STEP = 24;
+    var loadBtn = $('#rv-load'), empty = $('#rv-empty');
+    var applyRv = function () {
+      var match = cards.filter(function (c) {
+        var okT = !topic || c.dataset.topics.split('|').indexOf(topic) > -1;
+        return okT && (!rq || c.dataset.search.indexOf(rq) > -1);
+      });
+      cards.forEach(function (c) { c.hidden = true; });
+      match.forEach(function (c, i) { c.hidden = i >= shown; });
+      empty.hidden = match.length > 0;
+      loadBtn.parentNode.hidden = match.length <= shown;
+    };
+    $$('#rv-chips button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        topic = b.dataset.topic; shown = STEP;
+        $$('#rv-chips button').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+        applyRv();
+      });
+    });
+    var rqi = $('#rv-q'); if (rqi) rqi.addEventListener('input', function () { rq = rqi.value.trim().toLowerCase(); shown = STEP; applyRv(); });
+    loadBtn.addEventListener('click', function () { shown += STEP; applyRv(); });
+    rvGrid.addEventListener('click', function (e) {
+      var b = e.target.closest('.rv-more'); if (!b) return;
+      var t = b.previousElementSibling, open = b.getAttribute('aria-expanded') !== 'true';
+      t.classList.toggle('clamp', !open); b.setAttribute('aria-expanded', open);
+      b.textContent = open ? 'Show less' : 'Read full review';
+    });
+    applyRv();
+  }
 })();

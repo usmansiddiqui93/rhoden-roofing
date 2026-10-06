@@ -70,6 +70,13 @@ for root, _, files in os.walk(IMG_DIR):
     for f in files:
         IMGS.add(os.path.relpath(os.path.join(root, f), IMG_DIR))
 IMGS_LOWER = {i.lower(): i for i in IMGS}
+STEMS, STEMS_W = {}, {}
+MISSES = set()
+for i in sorted(IMGS):
+    m = re.match(r'(.+?)-(\d{2,4})x(\d{2,4})\.\w+$', i) or re.match(r'(.+?)-scaled\.\w+$', i)
+    if m:
+        k = m.group(1).lower(); w = int(m.group(2)) if m.lastindex and m.lastindex >= 2 else 99999
+        if k not in STEMS or w > STEMS_W.get(k, 0): STEMS[k] = i; STEMS_W[k] = w
 log("images:", len(IMGS))
 
 UP_RE = re.compile(r'wp-content/uploads/(.+?\.(?:jpe?g|png|gif|webp|svg))', re.I)
@@ -84,11 +91,10 @@ def local_img(url):
     for c in cands:
         hit = c if c in IMGS else IMGS_LOWER.get(c.lower())
         if hit: return BASE + "assets/img/" + hit
-    # any sized variant of the same original
-    stem = re.sub(r'\.\w+$', '', base_noext)
-    for i in IMGS:
-        if i.startswith(stem + "-") and re.match(re.escape(stem) + r'-(\d{2,4}x\d{2,4}|scaled)\.\w+$', i):
-            return BASE + "assets/img/" + i
+    # any sized variant of the same original (largest available)
+    stem = re.sub(r'\.\w+$', '', base_noext).lower()
+    if stem in STEMS: return BASE + "assets/img/" + STEMS[stem]
+    MISSES.add("https://rhodenroofing.com/wp-content/uploads/" + rel)
     return None
 
 # ------------------------------------------------------------------ classify
@@ -714,13 +720,38 @@ counts["home"] += 1
 # 404
 open(os.path.join(OUT, "404.html"), "w", encoding="utf-8").write(T["notfound"].render(P={"title": "Page not found", "seo_title": "Page not found", "description": "", "kind": "404"}, slug="404", canonical=SITE + "/"))
 
-# assets
+# assets: copy only images the generated pages use, web-optimized
+from PIL import Image
+used = set()
+for root, _, files in os.walk(OUT):
+    if os.sep + "assets" in root or os.sep + ".git" in root: continue
+    for f in files:
+        if f.endswith(".html"):
+            used.update(re.findall(r'assets/img/([^"\'\s)<>&]+)', open(os.path.join(root, f), encoding="utf-8").read()))
 dst = os.path.join(OUT, "assets", "img")
 copied = 0
-for i in IMGS:
-    d = os.path.join(dst, i)
-    if not os.path.exists(d) or os.path.getsize(d) != os.path.getsize(os.path.join(IMG_DIR, i)):
-        os.makedirs(os.path.dirname(d), exist_ok=True); shutil.copy2(os.path.join(IMG_DIR, i), d); copied += 1
+for i in sorted(used):
+    i = unquote(i)
+    src = os.path.join(IMG_DIR, i); d = os.path.join(dst, i)
+    if not os.path.exists(src) or os.path.exists(d): continue
+    os.makedirs(os.path.dirname(d), exist_ok=True)
+    try:
+        if i.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+            im = Image.open(src)
+            if im.width > 1600:
+                im = im.resize((1600, round(im.height * 1600 / im.width)), Image.LANCZOS)
+            if i.lower().endswith((".jpg", ".jpeg")):
+                im.convert("RGB").save(d, quality=80, optimize=True, progressive=True)
+            elif i.lower().endswith(".webp"):
+                im.save(d, quality=80)
+            else:
+                im.save(d, optimize=True)
+            if os.path.getsize(d) > os.path.getsize(src): shutil.copy2(src, d)
+        else:
+            shutil.copy2(src, d)
+    except Exception as e:
+        shutil.copy2(src, d)
+    copied += 1
 css = open(os.path.join(TPL, "_home_and_base.css")).read() + open(os.path.join(TPL, "_inner.css")).read()
 os.makedirs(os.path.join(OUT, "assets"), exist_ok=True)
 open(os.path.join(OUT, "assets", "site.css"), "w").write(css)
@@ -728,4 +759,6 @@ shutil.copy2(os.path.join(TPL, "site.js"), os.path.join(OUT, "assets", "site.js"
 # robots + sitemap list for QA
 open(os.path.join(OUT, "robots.txt"), "w").write("User-agent: *\nDisallow: /\n" if not A.live else "User-agent: *\nAllow: /\n")
 json.dump({"counts": dict(counts), "pages": len(PAGES), "images": len(IMGS), "copied": copied}, open(os.path.join(ROOT, "tools", "build-report.json"), "w"), indent=1)
+open(os.path.join(ROOT, "tools", "missing-images.txt"), "w").write("\n".join(sorted(MISSES)) + "\n")
+log("missing images:", len(MISSES))
 log("built:", dict(counts), "images copied:", copied)

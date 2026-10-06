@@ -1,0 +1,25 @@
+name: Fetch missing images
+on:
+  push:
+    branches: [main]
+    paths: ["tools/missing-images.txt", "tools/fetch_missing.py"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - run: python -u tools/fetch_missing.py
+      - name: Save to the scrape-extra branch (not published)
+        if: always()
+        run: |
+          cd extra
+          git init -q -b scrape-extra
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A && git commit -qm "Missing images"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" scrape-extra

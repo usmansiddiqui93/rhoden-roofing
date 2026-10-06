@@ -675,6 +675,42 @@ def page_ctx(slug, **kw):
     hero = P.get("bg") or P.get("image") or G["FALLBACK_HERO"]
     return dict(P=P, slug=slug, crumbs=crumbs_for(slug), hero=hero, canonical=SITE + "/" + ("" if slug == "index" else slug + "/"), **kw)
 
+# ------------------------------------------------------------------ project gallery
+def gallery_photos():
+    raw = open(HTML["gallery"], encoding="utf-8", errors="ignore").read().replace("\\/", "/") if "gallery" in HTML else ""
+    out, seen = [], set()
+    for rel in re.findall(r'wp-content/uploads/([^"\'\s)<>,]+?\.(?:jpe?g|png|webp))', raw, re.I):
+        stem = re.sub(r'(-\d{2,4}x\d{2,4}|-scaled)?\.\w+$', '', rel).lower()
+        if stem in seen or re.search(r'logo|favicon|icon|-bg|cropped-|rhodenroofing\.png|img2', rel, re.I): continue
+        loc = local_img("wp-content/uploads/" + rel)
+        if not loc: continue
+        seen.add(stem); out.append(loc)
+    return out
+GALLERY = gallery_photos()
+log("gallery photos:", len(GALLERY))
+THUMBS = set()
+def thumb(u):
+    """Small 480px copy for carousel thumbnails / grid."""
+    rel = u.split("assets/img/", 1)[1]
+    THUMBS.add(rel)
+    return BASE + "assets/thumb/" + rel
+def carousel_html(photos, label="Roofing projects"):
+    slides = "".join(
+        f'<figure class="car-slide" role="group" aria-roledescription="slide" aria-label="{i+1} of {len(photos)}">'
+        f'<img src="{u}" alt="Roofing project by Rhoden Roofing, LLC in Wichita, KS" loading="{"eager" if i < 2 else "lazy"}" decoding="async"></figure>'
+        for i, u in enumerate(photos))
+    thumbs = "".join(
+        f'<button type="button" class="car-thumb" data-i="{i}" aria-label="Show photo {i+1}"><img src="{thumb(u)}" alt="" loading="lazy" decoding="async"></button>'
+        for i, u in enumerate(photos))
+    return (f'<div class="carousel" data-carousel aria-roledescription="carousel" aria-label="{htmlmod.escape(label)}">'
+            f'<div class="car-stage"><div class="car-track" tabindex="0">{slides}</div>'
+            f'<button type="button" class="car-btn car-prev" aria-label="Previous photo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 5l-7 7 7 7"/></svg></button>'
+            f'<button type="button" class="car-btn car-next" aria-label="Next photo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 5l7 7-7 7"/></svg></button>'
+            f'<div class="car-count"><b>01</b><span>/ {len(photos):02d}</span></div>'
+            f'<button type="button" class="car-play" aria-label="Pause slideshow" aria-pressed="false"><span></span></button>'
+            f'<div class="car-progress"><i></i></div></div>'
+            f'<div class="car-thumbs">{thumbs}</div></div>')
+
 counts = defaultdict(int)
 T = {n: env.get_template(n + ".html") for n in ("home", "page", "article", "term", "glossary", "learning", "areas", "notfound")}
 for slug in sorted(PAGES):
@@ -725,7 +761,9 @@ for slug in sorted(PAGES):
             is_form = slug in ("free-estimate", "contact")
             ctx = page_ctx(slug, side=side, children=[{"href": url_for(c), "title": ptitle(c), "img": PAGES[c].get("image"), "excerpt": PAGES[c].get("excerpt", "")} for c in sorted(children)],
                            related=[card(a) for a in ARTICLES if any(w in PAGES[a]["title"].lower() for w in (slug.split("/")[-1].split("-")[:1]))][:3] if k == "page" else [],
-                           is_form=is_form, gallery=(slug == "gallery"))
+                           is_form=is_form, gallery=(slug == "gallery"),
+                           gallery_carousel=carousel_html(GALLERY) if slug == "gallery" and GALLERY else "",
+                           gallery_grid=[(u, thumb(u)) for u in GALLERY] if slug == "gallery" else [])
             html = T["page"].render(**ctx)
         write(slug, html); counts[k] += 1
     except Exception as e:
@@ -750,6 +788,10 @@ def svc_link(m):
 home_main = re.sub(r'<a class="svc[^"]*"[\s\S]*?</a>', svc_link, home_main)
 home_main = home_main.replace('href="#contact">Learn more', f'href="{ESTIMATE}">Learn more')
 if exists("hail-damage-roof-inspection"): home_main = home_main.replace('<a class="storm" href="#contact">', f'<a class="storm" href="{url_for("hail-damage-roof-inspection")}">')
+if GALLERY:
+    home_car = carousel_html(GALLERY[:24])
+    more = f'<div class="car-foot"><span class="count">{len(GALLERY)} project photos</span><a class="btn btn-dark" href="{url_for("gallery")}">View the full gallery →</a></div>' if exists("gallery") else ""
+    home_main = re.sub(r'<div class="mosaic">[\s\S]*?</div>', lambda m: home_car + more, home_main, count=1)
 latest = [card(a) for a in ARTICLES[:3]]
 open(os.path.join(OUT, "index.html"), "w", encoding="utf-8").write(env.get_template("home.html").render(
     P={"title": "Wichita Roofing Contractor", "seo_title": "Wichita Roofing Contractor | Rhoden Roofing, LLC",
@@ -792,6 +834,13 @@ for i in sorted(used):
     except Exception as e:
         shutil.copy2(src, d)
     copied += 1
+for rel in sorted(THUMBS):
+    src = os.path.join(IMG_DIR, rel); d = os.path.join(OUT, "assets", "thumb", rel)
+    if os.path.exists(d) or not os.path.exists(src): continue
+    os.makedirs(os.path.dirname(d), exist_ok=True)
+    try:
+        im = Image.open(src).convert("RGB"); im.thumbnail((480, 480), Image.LANCZOS); im.save(d, "JPEG", quality=74, optimize=True, progressive=True)
+    except Exception: shutil.copy2(src, d)
 css = open(os.path.join(TPL, "_home_and_base.css")).read() + open(os.path.join(TPL, "_inner.css")).read()
 os.makedirs(os.path.join(OUT, "assets"), exist_ok=True)
 open(os.path.join(OUT, "assets", "site.css"), "w").write(css)

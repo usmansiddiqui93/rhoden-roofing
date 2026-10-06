@@ -1,9 +1,16 @@
 # Rhoden Roofing – staging site
 
-Redesigned homepage for Rhoden Roofing, LLC (Wichita, KS), published with GitHub Pages.
+Redesigned Rhoden Roofing, LLC website (Wichita, KS): 479 pages covering services, roof types, service areas, the Learning Center (209 articles, 34 topic pages) and the roofing glossary (53 terms, 10 categories). Published with GitHub Pages.
 
-This is a staging site and is hidden from search engines (`noindex` meta tags and a `robots.txt` that blocks all crawlers).
+**Staging:** every page carries `noindex, nofollow` and `robots.txt` blocks all crawlers.
 
-To go live on rhodenroofing.com later: remove the `robots` meta tags in `index.html` and `thanks.html`, and delete `robots.txt`.
+## How it is built
+- `tools/scrape.py` (GitHub Actions) copies the live site's pages, content data and images to the `scrape` branch.
+- `tools/build.py` turns that copy into this static site using the templates in `tools/templates/`, rewriting every internal link and image to the staging copy.
 
-Images load from rhodenroofing.com. Run `./download-images.sh` to copy them into this repository before the old site is retired.
+Rebuild locally:
+
+    git clone -b scrape <repo> ../scrape
+    python3 tools/build.py --scrape ../scrape --base /rhoden-roofing/
+
+For the live domain: `python3 tools/build.py --scrape ../scrape --base / --live` (removes noindex, allows crawlers).

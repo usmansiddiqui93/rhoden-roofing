@@ -113,6 +113,9 @@ def kind_of(slug):
 
 SKIP = {"confirmation", "sitemap"}
 PAGES = {s: {"slug": s, "kind": kind_of(s)} for s in HTML if s not in SKIP}
+LAST_SEG = {}
+for _s in sorted(PAGES, key=lambda x: x.count("/")):
+    LAST_SEG.setdefault(_s.split("/")[-1], _s)
 def url_for(slug):
     return BASE if slug == "index" else BASE + slug + "/"
 def exists(slug): return slug in PAGES
@@ -132,6 +135,14 @@ def rewrite_href(href):
         s = slug_of(path)
         if s in PAGES: return url_for(s) + frag
         if s in REDIRECTS and REDIRECTS[s] in PAGES: return url_for(REDIRECTS[s]) + frag
+        last = s.split("/")[-1]
+        if last in LAST_SEG: return url_for(LAST_SEG[last]) + frag
+        if "…" in last:
+            pre = last.split("…")[0]
+            hits = [k for k in LAST_SEG if k.startswith(pre)]
+            if len(hits) == 1: return url_for(LAST_SEG[hits[0]]) + frag
+        if s.startswith("author/"): return url_for("our-team") if "our-team" in PAGES else BASE
+        if s.startswith("service-areas/") and "service-areas" in PAGES: return url_for("service-areas")
         if s.startswith(("free-estimate", "contact")): return url_for("free-estimate") if exists("free-estimate") else BASE + "#contact"
         return SITE + path + frag   # not part of the staging copy: send to live site
     return h
@@ -151,7 +162,7 @@ DROP_SEL = [".et_pb_blog_grid_wrapper", ".et_pb_blog_grid", ".et_pb_posts", ".et
             ".et_pb_social_media_follow", ".et_pb_contact_form_container", ".everest-forms", ".evf-container", ".gform_wrapper",
             ".wpforms-container", ".et_pb_map_container", ".et_pb_signup", ".et_pb_search", ".et_pb_sidebar_0", ".widget_search",
             ".et_pb_post_title", ".et_pb_menu", ".et_pb_fullwidth_menu", ".ti-widget", ".trustindex", ".sharedaddy", ".et_pb_countdown_timer",
-            ".et_pb_login", ".et_pb_shop", ".breadcrumbs", ".yoast-breadcrumbs", "#breadcrumbs", ".rank-math-breadcrumb", ".et_pb_bar_counters"]
+            ".et_pb_login", ".et_pb_widget_area", ".widget_area", ".et_pb_shop", ".breadcrumbs", ".yoast-breadcrumbs", "#breadcrumbs", ".rank-math-breadcrumb", ".et_pb_bar_counters"]
 def img_src(el):
     for a in ("nitro-lazy-src", "data-src", "data-lazy-src", "src"):
         v = el.get(a)
@@ -336,16 +347,40 @@ def clean_content(root, soup, page_title=""):
             if el.find(["img", "button", "iframe", "table", "details"]): continue
             if el.name == "div" and (el.get("class") or []) and ("video-wrap" in el.get("class")): continue
             if not el.get_text(strip=True).replace("\xa0", ""): el.decompose()
-    # strip leading "by X | date" leftovers
+    # drop columns / blocks that are only a heading (their widget was removed)
+    for col in root.select(".col"):
+        txt = col.get_text(" ", strip=True)
+        has_body = col.find(["p", "ul", "ol", "table", "details", "blockquote", "img", "button"]) is not None
+        only_cta = not col.find(["p", "ul", "ol", "img", "table"]) and len(txt) < 200
+        if (not has_body and len(txt) < 60) or only_cta and re.search(r"review", txt, re.I):
+            col.decompose()
+    for row in root.select(".row"):
+        cols = row.select(":scope > .col")
+        n = len(cols)
+        lens = [len(c.get_text(" ", strip=True)) for c in cols]
+        uneven = n > 1 and (max(lens) > 900 or max(lens) > 3 * max(1, min(lens)) and max(lens) > 400)
+        if n <= 1 or uneven:
+            for c in cols: c.unwrap()
+            row.unwrap()
+        else: row["style"] = f"--cols:{min(n, 3)}"
+    for col in root.select(".col"):
+        if not col.parent or "row" not in (col.parent.get("class") or []): col.unwrap()
+    # trailing headings with nothing after them
+    for h in root.find_all(["h2", "h3", "h4"]):
+        nxt = h.find_next_sibling()
+        if nxt is None and not (h.parent and h.parent.find_next_sibling()):
+            h.decompose()
     return root
 
+PUA = re.compile("[\ue000-\uf8ff\u2b55]")
 def inner_html(el):
     s = el.decode_contents() if el else ""
+    s = PUA.sub("", s)
     s = re.sub(r"\n\s*\n+", "\n", s)
     return s.strip()
 
 def text_of(el, n=None):
-    t = re.sub(r"\s+", " ", el.get_text(" ", strip=True)) if el else ""
+    t = re.sub(r"\s+", " ", re.sub("[\ue000-\uf8ff]", " ", el.get_text(" ", strip=True))) if el else ""
     return t if n is None or len(t) <= n else t[:n].rsplit(" ", 1)[0] + "…"
 
 # ------------------------------------------------------------------ parse every page
@@ -382,6 +417,10 @@ def parse(slug):
             pass
     # links to glossary categories / categories (for membership)
     body = soup.select_one(".et_pb_post_content") if P["kind"] == "article" else None
+    if body is None and P["kind"] == "term":
+        body = soup.select_one(".et-l--body")
+        if body is not None:
+            for side in body.select(".et_pb_column_2_5, .et_pb_column_1_3, .et_pb_column_1_4"): side.decompose()
     if body is None:
         body = soup.select_one(".et-l--body") or soup.select_one("#main-content") or soup.select_one("#et-main-area") or soup.body
     # background images in sections: take first as hero candidate
@@ -415,6 +454,7 @@ def parse(slug):
                 im = first.find("img")
                 if im is not None and not P["bg"]: P["bg"] = local_img(img_src(im))
                 first.decompose()
+    if re.search(r"stand behind our work|request a free estimate", lede, re.I): lede = ""
     P["lede"] = lede
     content = clean_content(body, soup, P["title"]) if body is not None else None
     html = inner_html(content)
@@ -654,7 +694,7 @@ for slug in sorted(PAGES):
             for g in P.get("gcats", []): same += [t for t in GCATS[g]["terms"] if t != slug and t not in same]
             ctx = page_ctx(slug, gcats=[{"href": url_for(g), "label": GCATS[g]["name"]} for g in P.get("gcats", [])],
                            same=[{"href": url_for(t), "title": ptitle(t), "short": PAGES[t]["short"]} for t in same[:8]],
-                           mentions=[card(a) for a in P.get("mentions", [])][:3])
+                           mentions=[card(a) for a in P.get("mentions", [])][:4])
             html = T["term"].render(**ctx)
         elif k in ("glossary-index", "gcat"):
             terms = TERMS if k == "glossary-index" else GCATS[slug]["terms"]
@@ -680,7 +720,7 @@ for slug in sorted(PAGES):
                            counties=[{"href": url_for(s), "label": PAGES[s]["area"]} for s in COUNTIES])
             html = T["areas"].render(**ctx)
         else:
-            side = side_links_for(slug)
+            side = None if k == "area" else side_links_for(slug)
             children = [c for c in PAGES if c.startswith(slug + "/") and c.count("/") == slug.count("/") + 1 and PAGES[c]["kind"] in ("page", "area")]
             is_form = slug in ("free-estimate", "contact")
             ctx = page_ctx(slug, side=side, children=[{"href": url_for(c), "title": ptitle(c), "img": PAGES[c].get("image"), "excerpt": PAGES[c].get("excerpt", "")} for c in sorted(children)],

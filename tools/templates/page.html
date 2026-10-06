@@ -24,7 +24,7 @@
       {% endif %}
       {% if P.area and CITIES %}
       <div class="side-list"><h4>Nearby service areas</h4><ul>
-        {% for s in CITIES[:8] %}{% if s != slug %}<li><a href="{{ url_for(s) }}">{{ PAGES[s].area }}</a></li>{% endif %}{% endfor %}
+        {% for s in CITIES[:14] %}{% if s != slug %}<li><a href="{{ url_for(s) }}">{{ PAGES[s].area }}</a></li>{% endif %}{% endfor %}
         {% if exists('service-areas') %}<li><a href="{{ url_for('service-areas') }}">All service areas</a></li>{% endif %}
       </ul></div>
       {% endif %}
